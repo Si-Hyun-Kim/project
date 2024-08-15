@@ -6,6 +6,7 @@ const app = express();
 const cookieParser = require('cookie-parser');
 const USER_COOKIE_KEY = 'USER';
 app.use(cookieParser());
+app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 
 // DB
@@ -23,17 +24,33 @@ app.set("view engine", "ejs");
 app.use('/node_modules', express.static(path.join(__dirname, 'node_modules')));
 
 // post
-// app.use(express.urlencoded({extend: true}));
+app.use(express.urlencoded({extend: true}));
+
+// login
+app.get('/login', (req, res) => {
+  res.render('login'); // login.ejs 파일을 렌더링
+});
+
+// signup
+app.get('/signup', (req, res) => {
+  res.render('signup'); // signup.ejs 파일을 렌더링
+});
+
 
 // router
 var indexRouter = require('./router/');
 var resultRouter = require('./router/result');
 var uploadRouter = require('./router/upload');
+var loginRouter = require('./router/login');
+var signupRouter = require('./router/signup');
+
 
 app.use('/', indexRouter);
 app.use('/', resultRouter);
 app.use('/', uploadRouter);
 app.use(express.static('upload'))
+app.use('/', loginRouter);
+app.use('/', signupRouter);
 
 app.listen(app.get('port'), () => {
   console.log('server is running at', app.get('port'));
