@@ -1,38 +1,41 @@
-var express = require('express');
-var router = express.Router();
+// login.js
+
+const express = require('express');
+const router = express.Router();
 const db = require('../lib/db');
+const { USER_COOKIE_KEY } = require('../config/constants');
 
 router.post('/login', (req, res) => {
-  const username = req.cookies[USER_COOKIE_KEY];
+  const { id, username } = req.body;
+  const query = `SELECT id, username FROM users WHERE id=? and username=?`
+  const userData = db.query(query, [id, username], (err, results) => {
 
-
-  if (user) {
-    const userData = JSON.parse(username);
-
-    let query = `SELECT id,username FROM users WHERE id=? and username='?'`
-    db.query(query, [userData.id, userData.username], (err, results) => {
-      if (err) {
-        console.log(err);
-        return;
-      }
-
-      console.log(results)
-    })
-
-    if (db.get(userData.id)) {
-      res.status(200).send(`
-        <a href="/logout">Log Out</a>
-        <h1>id: ${userData.id}, username: ${userData.username}
-        `);
-        return;
+  if (err) {
+      console.log(err);
     }
-  }
+    
+  });
 
-  res.status(200).send(`
-    <a href="/login" class="btn btn-primary">Log In</a>
-    <a href="/signup" class="btn btn-primary">Sign Up</a>
-    <h1>Not Logged In</h1>
-    `);
-})
+  if (!userData.values) {
+    res.status(400).send(`Not Registerd ID: ${id}`);
+    return;
+  }
+  
+  const dbId = userData.values[0];
+  const dbName = userData.values[1];
+
+  if (username !== dbName) {
+    console.log(username, dbId)
+    res.status(400).send('Incorrect Username');
+    return;
+  }
+  // 결과에서 순환 참조를 포함하지 않는 객체 생성
+  const user = dbName;
+
+  res.cookie(USER_COOKIE_KEY, JSON.stringify(user), { httpOnly: true });
+  res.redirect('/');
+
+
+});
 
 module.exports = router;
